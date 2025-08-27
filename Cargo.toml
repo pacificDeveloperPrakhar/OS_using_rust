@@ -10,4 +10,9 @@ panic="abort"
 name="os_rust"
 test=false
 bench=false
-[dependencies]
+[unstable]
+build-std-features = ["compiler-builtins-mem"]
+build-std = ["core", "compiler_builtins"]
+
+[build-dependencies]
+bootloader = "0.11.11"

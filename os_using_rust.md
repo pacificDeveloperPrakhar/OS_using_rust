@@ -294,3 +294,6 @@ cargo +nightly build -Zbuild-std=core,compiler_builtins --target x86_64-unknown-
 using ansii code
 
 24. . For printing “Hello World!”, we just need to know that the buffer is located at address 0xb8000 and that each character cell consists of an ASCII byte and a color byte.
+
+25. run the script using
+cargo +nightly build -Zbuild-std=core,compiler_builtins --target custom_target.json
