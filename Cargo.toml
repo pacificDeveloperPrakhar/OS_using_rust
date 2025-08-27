@@ -6,4 +6,8 @@ edition = "2024"
 panic="abort"
 [profile.release]
 panic="abort"
+[[bin]]
+name="os_rust"
+test=false
+bench=false
 [dependencies]
