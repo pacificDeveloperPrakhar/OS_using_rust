@@ -147,6 +147,11 @@ impl Writer {
 }
 //create the global static writer which when accesed for the first time will inititalize
 //then after creating that it will use that everywhere
+//now this mutex from the spin does not require the os functionalities because right now we are applying the
+// most basic lockingin mechaninism
+// where the thread or consumer just access the data using the loop so ,keeps trying to lock in the loop
+// once its successfull it locks on
+
 use lazy_static::lazy_static;
 lazy_static!{
     pub static ref writer:Mutex<Writer>=Mutex::new(Writer
@@ -159,15 +164,26 @@ lazy_static!{
         }
     });
 }
-//now this mutex from the spin does not require the os functionalities because right now we are applying the
-// most basic lockingin mechaninism
-// where the thread or consumer just access the data using the loop so ,keeps trying to lock in the loop
-// once its successfull it locks on
-// now the function to write something
-pub fn write_something()
-{
-   write!(writer.lock(),"now here is the new sentence").unwrap();
-}
 
 // now we will override the print and println function from the std library but since we have no 
 // std library we hav eto create of our own from the scratch
+// this will remain hidden ,this wont show to public documentation and will not show up using the
+// cargo doc
+#[doc(hidden)]
+pub fn _print(args:fmt::Arguments)
+{   
+    // writer.lock().write_string("#");
+    writer.lock().write_fmt(args).unwrap();
+}
+
+// these macros have been copied from the documentation for the println and print since we dont have those acros in the bare metal
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => ($crate::vga_buffer::_print(format_args!($($arg)*)));
+}
+
+#[macro_export]
+macro_rules! println {
+    () => ($crate::print!("\n"));
+    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
+} 

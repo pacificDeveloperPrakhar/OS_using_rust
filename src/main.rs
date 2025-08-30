@@ -13,6 +13,7 @@ use core::panic::PanicInfo;
 #[panic_handler]
 fn on_panic_encounter(panic:&PanicInfo)->!
 {
+  println!("{}", panic);
   loop
   {
 
@@ -32,7 +33,9 @@ pub extern "C" fn _start()->!
   //         *vga_buffer.offset(i as isize * 2 + 1) = 0xb;
   //     }
   // }
-  crate::vga_buffer::write_something();
+  // crate::vga_buffer::write_something();
+  panic!("lets generate the panic to see how  the panic handler respinds");
+  
  loop
  {}
 }
