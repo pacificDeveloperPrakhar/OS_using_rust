@@ -4,6 +4,10 @@
 #![no_std]
 // also no main function we do be creating our won custom startup rather than crt0
 #![no_main]
+
+
+pub mod vga_buffer;
+
 use core::panic::PanicInfo;
 // this ttribute adds metadata to the function telling to execute ehen it encounters the panic
 #[panic_handler]
@@ -20,15 +24,15 @@ static HELLO: &[u8] = b"Hello World!";
 #[unsafe(no_mangle)]
 pub extern "C" fn _start()->!
 {
-  let vga_buffer = 0xb8000 as *mut u8;
+  // let vga_buffer = 0xb8000 as *mut u8;
 
-  for (i, &byte) in HELLO.iter().enumerate() {
-      unsafe {
-          *vga_buffer.offset(i as isize * 2) = byte;
-          *vga_buffer.offset(i as isize * 2 + 1) = 0xb;
-      }
-  }
-
+  // for (i, &byte) in HELLO.iter().enumerate() {
+  //     unsafe {
+  //         *vga_buffer.offset(i as isize * 2) = byte;
+  //         *vga_buffer.offset(i as isize * 2 + 1) = 0xb;
+  //     }
+  // }
+  crate::vga_buffer::write_something();
  loop
  {}
 }

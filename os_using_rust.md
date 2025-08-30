@@ -297,3 +297,14 @@ using ansii code
 
 25. run the script using
 cargo +nightly build -Zbuild-std=core,compiler_builtins --target custom_target.json
+
+26. run the qemu cmd
+qemu-system-x86_64 \
+  -drive format=raw,file=target/custom_target/debug/bootimage-os_rust.bin \
+  -vnc :0
+
+27. now run the vncviewer
+vncviewer 127.0.0.1:5900
+
+28. remember the bootloader requires the earlier version of the volatile that is between 0.2 to 0.6
+use volatile version volatile = "0.2.6"
