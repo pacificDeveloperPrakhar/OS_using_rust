@@ -1,15 +1,9 @@
 [package]
 name = "os_rust"
 version = "0.1.0"
-# Use a compatible edition. 2021 is a good choice for modern syntax
-# while maintaining broad compatibility with older dependencies.
 edition = "2021"
 
-[profile.dev]
-panic = "abort" # Abort on panic for a bare-metal environment
 
-[profile.release]
-panic = "abort"
 
 [[bin]]
 name = "os_rust"
@@ -17,14 +11,7 @@ test = true
 bench = false
 
 [dependencies]
-# bootloader 0.9.x is compatible with volatile 0.2.x, but not newer versions.
-# Sticking with this older combination is necessary for this version of the OS tutorial.
 bootloader = "0.9.23"
 volatile = "0.2.6"
-
-# lazy_static is used for initializing the global WRITER.
-# It needs the `spin_no_std` feature for use in a bare-metal environment.
 lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
-
-# `spin` is used by lazy_static for its mutex. The latest version is compatible.
-spin = "0.10.0"
+spin = "0.9.8"
