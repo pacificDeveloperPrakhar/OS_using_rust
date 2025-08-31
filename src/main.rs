@@ -5,6 +5,11 @@
 // also no main function we do be creating our won custom startup rather than crt0
 #![no_main]
 
+// this macro tells to create the new main test harness so that we can call it inside of the code
+#![reexport_test_harness_main = "test_main"]
+// importing the necessary testing rlated packages
+#![feature(custom_test_frameworks)]
+#![test_runner(crate::test_runner)]
 
 pub mod vga_buffer;
 
@@ -34,8 +39,9 @@ pub extern "C" fn _start()->!
   //     }
   // }
   // crate::vga_buffer::write_something();
-  panic!("lets generate the panic to see how  the panic handler respinds");
-  
+  // panic!("lets generate the panic to see how  the panic handler respinds");
+  // this macro tells to not include while cargo build and include only while testing using the cargo test
+
  loop
  {}
 }

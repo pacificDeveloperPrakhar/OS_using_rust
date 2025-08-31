@@ -13,7 +13,7 @@ panic = "abort"
 
 [[bin]]
 name = "os_rust"
-test = false
+test = true
 bench = false
 
 [dependencies]
