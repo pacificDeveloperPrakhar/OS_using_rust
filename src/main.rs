@@ -7,12 +7,16 @@
 // importing the necessary testing rlated packages
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test_runner)]
-
-// this macro tells to create the new main test harness so that we can call it inside of the code
 #![reexport_test_harness_main = "test_main"]
+// now we gonna import crate which provide the macro to wirte  embedded assembly code
+// This feature is needed for `const` in asm!
+#![feature(asm_const)]
+// now import the asm code
+use core::arch::asm;
+// this macro tells to create the new main test harness so that we can call it inside of the code
 
 pub mod vga_buffer;
-
+pub mod serial;
 use core::panic::PanicInfo;
 // this ttribute adds metadata to the function telling to execute ehen it encounters the panic
 #[panic_handler]
@@ -43,6 +47,7 @@ pub extern "C" fn _start()->!
   // this macro tells to not include while cargo build and include only while testing using the cargo test
   #[cfg(test)]
   test_main();
+ 
  loop
  {}
 }
@@ -51,7 +56,7 @@ pub extern "C" fn _start()->!
 fn trivial_assertion() {
     print!("trivial assertion... ");
     assert_eq!(1, 1);
-    println!("[ok]");
+    
 }
 
 // our custom test runner
@@ -61,8 +66,50 @@ fn trivial_assertion() {
 
 #[cfg(test)]
 pub fn test_runner(tests: &[&dyn Fn()]) {
-    println!("Running {} tests", tests.len());
-    for test in tests {
-        test();
-    }
+    // println!("Running {} tests", tests.len());
+    // for test in tests {
+    //     test();
+    // }
+    // ==================================================================================================
+    // we gonna be using the serial_println! to print to the host
+    serial_println!("Running {} tests", tests.len());
+    // exit_qemu(QemuExitCode::Success);
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u32)]
+pub enum QemuExitCode {
+    Success = 0x10,
+    Failed = 0x11,
+}
+
+pub fn exit_qemu(exit_code: QemuExitCode) {
+//    unsafe{
+//     *memory.offset(0)=0x10;
+// };
+// unsafe{
+
+//   ptr::write_volatile(memory,33);
+// }
+// use x86_64::instructions::port::Port;
+
+//     unsafe {
+//         let mut port = Port::new(0xf4);
+//         port.write(exit_code as u32);
+//     }
+
+unsafe {
+  // The `asm!` macro takes the assembly code string and a list of operands.
+  // `out dx, al` is the instruction.
+  // `in("al") value` tells the compiler to place the `value` variable into the `al` register.
+  // `in("dx") port` tells the compiler to place the `port` variable into the `dx` register.
+  // `options(nostack, nomem)` are optimizations that inform the compiler
+  // that the assembly code doesn't modify the stack or memory.
+  asm!(
+      "out dx, al",
+      in("dx") 0xf4 as u16,
+      in("al") exit_code as i8,
+      options(nostack, nomem)
+  );
+}
 }

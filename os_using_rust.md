@@ -308,3 +308,63 @@ vncviewer 127.0.0.1:5900
 
 28. remember the bootloader requires the earlier version of the volatile that is between 0.2 to 0.6
 use volatile version volatile = "0.2.6"
+
+
+## Memory Related Intrinsics
+
+When we recompiled the crate, we pulled in `compiler_builtins`.  
+This provides implementations of essential memory-related functions:
+
+- **`memset`** → sets all bytes in a memory block to a given value  
+- **`memcpy`** → copies one memory block into another  
+- **`memcmp`** → compares one memory block with another  
+
+### Why is this a problem?
+
+- Normally, these functions are **provided by the C standard library**.  
+- But when building an **operating system for a CISC architecture**,  
+  there is **no operating system by default**, hence **no C library available**.  
+
+This results in **missing symbol errors** when the compiler expects `memcpy`, `memset`, or `memcmp`.
+
+---
+
+### Possible Ways of Resolving the Problem
+
+#### 1. Write Your Own Implementations
+You could implement `memcpy`, `memset`, and `memcmp` manually.  
+
+⚠️ **Warning**: This is very risky.  
+For example:  
+
+```rust
+#[no_mangle]
+pub unsafe extern "C" fn memset(bytes: *mut u8, value: u8, count: usize) {
+    for i in 0..count {
+        *bytes.add(i) = value;
+    }
+}
+
+
+## Possible Solutions
+
+### 1. Implement Intrinsics Manually (⚠️ Risky)
+- Create custom implementations of `memset`, `memcpy`, and `memcmp`.  
+- Danger: risk of circular dependencies due to compiler desugaring.
+
+### 2. Use `compiler_builtins` (✅ Recommended)
+- Enable the intrinsics provided by `compiler_builtins`.  
+- This avoids missing symbol errors and provides well-tested implementations.
+
+---
+```
+## Conclusion
+
+For bare-metal Rust (without an OS or C standard library):
+- **Don’t reinvent `memset`, `memcpy`, `memcmp`** unless you’re absolutely sure.  
+- Instead, enable and use **`compiler_builtins`** to safely provide th
+
+
+now for loop internally uses "IntoIterator::into_iter" trait method and this in turn internally uses memcpy again from the c standard library but we dont have any memcpy"
+
+
