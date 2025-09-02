@@ -40,9 +40,15 @@ pub extern "C" fn _start()->!
   // here i
   use os_rust::interrupt::init;
   init();
+  // cause a kernel stack overflow by calling a function recursively
+  recursively_call_fn();
      // invoke a breakpoint exception
   // x86_64::instructions::interrupts::int3(); 
-  // ===============================or============================
+  // ===========================invoking the page fault exception
+  unsafe {
+    *(0xdeadbeef as *mut u8) = 42;
+  };
+
  
   // ==========================================================================================================
   // let vga_buffer = 0xb8000 as *mut u8;
@@ -146,4 +152,9 @@ pub fn if_exception_breakpoint_works()
       "int3"
     );
   };
+}
+
+pub fn recursively_call_fn()
+{
+  recursively_call_fn();
 }

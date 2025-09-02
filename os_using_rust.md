@@ -418,4 +418,78 @@ serial interface
 
 ### breakdown exception
 
-![Alt text](public/breakpoint_exception_draw.png)
+
+
+
+
+# Double and triple fault
+
+###  Function Item vs Function Pointer
+
+* ## Function Item
+When you write the name of a function (e.g. double_fault_handle), you’re not yet referring to a pointer — you’re referring to a zero-sized type (ZST) that uniquely identifies that function.
+Think of it like a “token” that says this is the function itself, not its address.
+
+* ## Function Pointer
+What the set_handler_fn API expects is an actual function pointer, i.e., something of type:
+
+extern "x86-interrupt" fn(InterruptStackFrame, _) -> !
+
+
+That’s literally "a callable pointer to code with this ABI and signature".
+
+```
+extern "x86-interrupt" fn(InterruptStackFrame, _) -> !
+```
+##             Page fault
+* The CPU tries to write to 0xdeadbeef, which causes a page fault.
+
+* Like before, the CPU looks at the corresponding entry in the IDT and sees that no handler 
+
+* function is defined. Thus, a double fault occurs.
+
+* The CPU jumps to the – now present – double fault handler.
+
+
+## Causes of double fault
+
+* interrupt handle was not present for that paritcular interrupt
+
+* handle for that interrupt was swapped out
+
+* swapped out may mean that the interrupt was delivered but it did not triggerd the handle
+
+#### Example
+
+1. a breakpoint exception occurs, but the corresponding handler function is swapped out?
+
+2. a page fault occurs, but the page fault handler is swapped out?
+
+3. a divide-by-zero handler causes a breakpoint exception, but the breakpoint handler is swapped out?
+
+4. our kernel overflows its stack and the guard page is hit?
+
+
+### What "swapped out" could mean in this context
+
+* **Not loaded into memory**
+  - The handler code exists, but it’s currently not present in memory (e.g., swapped to disk in a virtual memory system).  
+  - When the exception occurs, the CPU cannot find the handler’s instructions immediately.
+
+* **Replaced with another handler**
+  - The original handler was registered earlier but has been replaced with another one in the Interrupt Descriptor Table (IDT).  
+  - This means the expected handler is not the one that gets executed.
+
+* **Overwritten or corrupted**
+  - The handler entry in the IDT may have been accidentally or maliciously modified.  
+  - The CPU will jump to invalid or unintended code instead of the correct handler.
+
+* **Handler causing its own exception**
+  - Even if the handler is present, if it executes invalid operations (like a page fault or divide by zero), it raises a new exception.  
+  - If that second exception cannot be handled, it may cause a *double fault* or even a *triple fault* (leading to a CPU reset).
+
+
+
+![Alt text](public/2025-09-02_14-20.png)
+
+

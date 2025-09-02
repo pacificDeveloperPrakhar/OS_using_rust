@@ -16,6 +16,7 @@ lazy_static! {
         let mut idt = InterruptDescriptorTable::new();
         // now we are setting all the interrupt handling over here while defining the idt
         idt.breakpoint.set_handler_fn(breakpoint_handle);
+        idt.double_fault.set_handler_fn(double_fault_handle);
         idt
     };
 }
@@ -35,6 +36,12 @@ pub extern "x86-interrupt" fn breakpoint_handle(stack_frame: InterruptStackFrame
     println!("EXCEPTION: BREAKPOINT\n{:#?}", stack_frame);
 }
 
+//now  create the double fault interrupt handler it also requires the error code
+pub extern "x86-interrupt" fn double_fault_handle(stack_frame:InterruptStackFrame,error_code:u64)->!
+{
+    println!("EXCEPTION: DOUBLE FAULT\n{:#?}", stack_frame);
+    panic!("EXCEPTION: DOUBLE FAULT\n{:#?}", stack_frame);
+}
 // now initialize the idt
 pub fn init()
 {
