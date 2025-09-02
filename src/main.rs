@@ -16,7 +16,6 @@ use core::arch::asm;
 // now import the x86_64 crate
 use x86_64;
 // this macro tells to create the new main test harness so that we can call it inside of the code
-
 pub mod vga_buffer;
 pub mod serial;
 
@@ -42,7 +41,9 @@ pub extern "C" fn _start()->!
   use os_rust::interrupt::init;
   init();
      // invoke a breakpoint exception
-  x86_64::instructions::interrupts::int3(); 
+  // x86_64::instructions::interrupts::int3(); 
+  // ===============================or============================
+ 
   // ==========================================================================================================
   // let vga_buffer = 0xb8000 as *mut u8;
 
@@ -58,7 +59,7 @@ pub extern "C" fn _start()->!
   #[cfg(test)]
   test_main();
   // comment out this later when in  production
-  exit_qemu(QemuExitCode::Success);
+  // exit_qemu(QemuExitCode::Success);
  loop
  {}
 }
@@ -77,13 +78,13 @@ fn trivial_assertion() {
 
 #[cfg(test)]
 pub fn test_runner(tests: &[&dyn Fn()]) {
-    // println!("Running {} tests", tests.len());
-    // for test in tests {
-    //     test();
-    // }
+    serial_println!("Running {} tests", tests.len());
+    for test in tests {
+        test();
+    }
     // ==================================================================================================
     // we gonna be using the serial_println! to print to the host
-    serial_println!("Running {} tests", tests.len());
+
     exit_qemu(QemuExitCode::Success);
 }
 
@@ -133,4 +134,16 @@ pub fn on_panic_encounter_during_test(info:&PanicInfo)->!
   serial_println!("error encountered during test: {}",info);
   exit_qemu(QemuExitCode::Success);
   loop{}
+}
+
+
+
+#[test_case]
+pub fn if_exception_breakpoint_works()
+{
+  unsafe{
+    asm!(
+      "int3"
+    );
+  };
 }
