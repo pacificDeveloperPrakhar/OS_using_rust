@@ -1,6 +1,7 @@
 use x86_64::VirtAddr;
 use x86_64::structures::tss::TaskStateSegment;
-use lazy_static::lazy_static;
+use x86_64::structures::gdt::GlobalDescriptorTable;
+use x86_64::structures::gdt::Descriptor;
 
 pub const DOUBLE_FAULT_1ST_INDEX:u16=0;
 lazy_static!
@@ -37,4 +38,39 @@ lazy_static!
         };
         return tss;
     }
+}
+
+
+lazy_static!
+{
+    pub static ref GDT:GlobalDescriptorTable={
+     let gdt=GlobalDescriptorTable::new();
+//      Descriptor::kernel_code_segment() creates a descriptor for kernel-mode code:
+
+// Executable code that runs at privilege level 0 (ring 0).
+
+// Typically read-only (cannot write to code memory).
+
+// Used by the CPU to know:
+
+// Base address of the segment (usually 0 in flat mode)
+
+// Segment limit (size)
+
+// Privilege level (kernel vs user)
+
+// Segment type (code, executable, readable)
+     gdt.add_entry(Descriptor::kernel_code_segment());
+// adding our defined task state segment into the gdt
+     gdt.add_entry(Descriptor::tss_segment(&TSS));
+     return gdt;
+    };
+    return GDT;
+}
+
+
+// this fn will load the gdt
+pub fn init_gdt()
+{
+    GDT.load()
 }
