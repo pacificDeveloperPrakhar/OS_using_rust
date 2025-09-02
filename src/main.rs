@@ -13,12 +13,16 @@
 #![feature(asm_const)]
 // now import the asm code
 use core::arch::asm;
+// now import the x86_64 crate
+use x86_64;
 // this macro tells to create the new main test harness so that we can call it inside of the code
 
 pub mod vga_buffer;
 pub mod serial;
+
 use core::panic::PanicInfo;
 // this ttribute adds metadata to the function telling to execute ehen it encounters the panic
+#[cfg(not(test))]
 #[panic_handler]
 fn on_panic_encounter(panic:&PanicInfo)->!
 {
@@ -34,6 +38,12 @@ static HELLO: &[u8] = b"Hello World!";
 #[unsafe(no_mangle)]
 pub extern "C" fn _start()->!
 {
+  // here i
+  use os_rust::interrupt::init;
+  init();
+     // invoke a breakpoint exception
+  x86_64::instructions::interrupts::int3(); 
+  // ==========================================================================================================
   // let vga_buffer = 0xb8000 as *mut u8;
 
   // for (i, &byte) in HELLO.iter().enumerate() {
@@ -47,7 +57,8 @@ pub extern "C" fn _start()->!
   // this macro tells to not include while cargo build and include only while testing using the cargo test
   #[cfg(test)]
   test_main();
- 
+  // comment out this later when in  production
+  exit_qemu(QemuExitCode::Success);
  loop
  {}
 }
@@ -73,7 +84,7 @@ pub fn test_runner(tests: &[&dyn Fn()]) {
     // ==================================================================================================
     // we gonna be using the serial_println! to print to the host
     serial_println!("Running {} tests", tests.len());
-    // exit_qemu(QemuExitCode::Success);
+    exit_qemu(QemuExitCode::Success);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -112,4 +123,14 @@ unsafe {
       options(nostack, nomem)
   );
 }
+}
+
+#[cfg(test)]
+#[panic_handler]
+pub fn on_panic_encounter_during_test(info:&PanicInfo)->!
+{
+  serial_println!("[failed]\n");
+  serial_println!("error encountered during test: {}",info);
+  exit_qemu(QemuExitCode::Success);
+  loop{}
 }

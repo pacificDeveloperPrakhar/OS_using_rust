@@ -368,3 +368,48 @@ For bare-metal Rust (without an OS or C standard library):
 now for loop internally uses "IntoIterator::into_iter" trait method and this in turn internally uses memcpy again from the c standard library but we dont have any memcpy"
 
 
+
+## Embedded Assembly Code
+
+1. when using the IO/mappping we do require the 
+assembly code to control the register data manipulation
+
+2. there are two two instructions involved "in" and "out"
+
+3. each device port is addrssed by some number
+lets say the 0xf4 this is mostly empty
+and in non use so we can create a fake  device 
+and associate that to this
+with register of size 4
+
+4. we create the fake device by passing the 
+arguments like
+```
+test-args = ["-device", "isa-debug-exit,iobase=0xf4,iosize=0x04","-vnc", ":0","-serial","stdio"]
+```
+5. now use the macro #![feature(asm_const)]
+and import the crate use core::arch::asm
+```
+asm!(
+      "out dx, al",
+      in("dx") 0xf4 as u16,
+      in("al") exit_code as i8,
+      options(nostack, nomem)
+  );
+  ```
+6. this is unsafe code compiler wont be able to determine it so wrap it inside of the unsafe
+
+7. dx and al are register dx is of 16 bit and al is of 8 bit 
+options(nostack,nomem) tells compiler that no stack has been modified and no memory has been modified
+
+# Serial Interface
+
+serial interface was used by the older machines 
+so we gonna use that for ours as well it is a way of interacting with the devices
+
+uart is the chip that is used to implement the 
+serial interface 
+
+* use the crate uart_16550
+
+* Like the isa-debug-exit device, the UART is programmed using port I/O. Since the UART is more complex, it uses multiple I/O ports for programming different device registers. The unsafe SerialPort::new function expects the address of the first I/O port of the UART as an argument, from which it can calculate the addresses of all needed ports. We’re passing the port address 0x3F8, which is the standard port number for the first serial interface.
