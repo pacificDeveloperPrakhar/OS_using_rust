@@ -413,3 +413,9 @@ serial interface
 * use the crate uart_16550
 
 * Like the isa-debug-exit device, the UART is programmed using port I/O. Since the UART is more complex, it uses multiple I/O ports for programming different device registers. The unsafe SerialPort::new function expects the address of the first I/O port of the UART as an argument, from which it can calculate the addresses of all needed ports. We’re passing the port address 0x3F8, which is the standard port number for the first serial interface.
+
+# Interrupt handling
+
+### breakdown exception
+
+![Alt text](public/breakpoint_exception_draw.png)
